@@ -16,7 +16,21 @@ sda_bigger=$( [ "$(lsblk -b -n -o SIZE /dev/sda 2> /dev/null)" -gt "$(lsblk -b -
 
 
 # Определяем комбинации и выводим информацию
-if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && $has_sde -eq 1 ]]; then
+
+
+if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) ]]; then
+    echo -e "\e[32m\e[40m2 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd.\e[0m"
+    echo '/dev/sda1       /home/user/archive/disk1        ext4    defaults        0       0'| sudo tee -a /etc/fstab
+    echo '/dev/sdb1       /home/user/archive/disk2        ext4    defaults        0       0'| sudo tee -a /etc/fstab
+    echo '/dev/sdc1       /home/user/archive/disk3        ext4    defaults        0       0'| sudo tee -a /etc/fstab
+    echo '/dev/sdd1       /home/user/archive/disk4        ext4    defaults        0       0'| sudo tee -a /etc/fstab
+    sudo parted /dev/sda mklabel gpt
+    sudo parted /dev/sdb mklabel gpt
+    sudo parted /dev/sdc mklabel gpt
+    sudo parted /dev/sdd mklabel gpt
+    sudo mkdir -p /home/user/archive/disk{1..4}
+    
+elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && $has_sde -eq 1 ]]; then
     echo -e "\e[32m\e[40m1 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd, sde.\e[0m"
     echo '/dev/sda1       /home/user/archive/disk1        ext4    defaults        0       0'| sudo tee -a /etc/fstab
     echo '/dev/sdb1       /home/user/archive/disk2        ext4    defaults        0       0'| sudo tee -a /etc/fstab
@@ -29,18 +43,6 @@ if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $
     sudo parted /dev/sdd mklabel gpt
     sudo parted /dev/sde mklabel gpt
     sudo mkdir -p /home/user/archive/disk{1..5}
-
-elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) ]]; then
-    echo -e "\e[32m\e[40m2 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd.\e[0m"
-    echo '/dev/sda1       /home/user/archive/disk1        ext4    defaults        0       0'| sudo tee -a /etc/fstab
-    echo '/dev/sdb1       /home/user/archive/disk2        ext4    defaults        0       0'| sudo tee -a /etc/fstab
-    echo '/dev/sdc1       /home/user/archive/disk3        ext4    defaults        0       0'| sudo tee -a /etc/fstab
-    echo '/dev/sdd1       /home/user/archive/disk4        ext4    defaults        0       0'| sudo tee -a /etc/fstab
-    sudo parted /dev/sda mklabel gpt
-    sudo parted /dev/sdb mklabel gpt
-    sudo parted /dev/sdc mklabel gpt
-    sudo parted /dev/sdd mklabel gpt
-    sudo mkdir -p /home/user/archive/disk{1..4}
 
 elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && ($has_sdb -eq 0 || $has_flash -eq 1) && $has_sdc -eq 0 && $has_sdd -eq 0 && $has_sde -eq 0 ]]; then
     echo -e "\e[32m\e[40m3 В системе обнаружены NVMe накопитель и устройство: sda.\e[0m"
