@@ -11,6 +11,7 @@ has_sdc=$(echo "$devices" | grep -q '^sdc' && echo 1 || echo 0)
 has_sdd=$(echo "$devices" | grep -q '^sdd' && echo 1 || echo 0)
 has_sde=$(echo "$devices" | grep -q '^sde' && echo 1 || echo 0)
 has_sdf=$(echo "$devices" | grep -q '^sdf' && echo 1 || echo 0)
+has_sdg=$(echo "$devices" | grep -q '^sdg' && echo 1 || echo 0)
 has_flash=$(ls /dev | grep vfat > /dev/null && echo 1 || echo 0)
 sda_bigger=$( [ "$(lsblk -b -n -o SIZE /dev/sda 2> /dev/null)" -gt "$(lsblk -b -n -o SIZE /dev/sdb 2> /dev/null)" ] 2> /dev/null && echo 1 || echo 0 )
 
@@ -29,8 +30,8 @@ EOF
 
 
 # Определяем комбинации и выводим информацию
-if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) && $has_sdf -eq 0 ]]; then
-    echo -e "\e[32m\e[40m1 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd.\e[0m"
+if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) ]]; then
+    echo -e "\e[32m\e[40m2 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd.\e[0m"
     echo "/dev/sda1       /home/$USER/archive/disk1        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdb1       /home/$USER/archive/disk2        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdc1       /home/$USER/archive/disk3        ext4    defaults        0       0"| sudo tee -a /etc/fstab
@@ -59,7 +60,7 @@ if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $
     sudo mkdir -p /home/$USER/archive/disk{1..4}
 
 elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && $has_sde -eq 1 ]]; then
-    echo -e "\e[32m\e[40m2 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd, sde.\e[0m"
+    echo -e "\e[32m\e[40m1 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd, sde.\e[0m"
     echo "/dev/sda1       /home/$USER/archive/disk1        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdb1       /home/$USER/archive/disk2        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdc1       /home/$USER/archive/disk3        ext4    defaults        0       0"| sudo tee -a /etc/fstab
@@ -104,8 +105,27 @@ elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && ($has_sdb -eq 0 || $has_flash -eq 1
     done
 
     echo "Имя разделов было удалено для всех устройств."
+elif [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && ($has_sdc -eq 0 || $has_flash -eq 1) && $has_sdd -eq 0 && $has_sde -eq 0 ]]; then
+    echo -e "\e[32m\e[40m3 В системе обнаружены NVMe накопитель и устройство: sda и sdb.\e[0m"
+    echo "/dev/sda1       /home/$USER/archive/disk1        ext4    defaults        0       0"| sudo tee -a /etc/fstab
+    echo "/dev/sdb1       /home/$USER/archive/disk2        ext4    defaults        0       0"| sudo tee -a /etc/fstab
+    sudo mkdir -p /home/$USER/archive/disk{1..2}
+    sudo parted /dev/sda mklabel gpt
+    sudo parted /dev/sdb mklabel gpt
+    sudo parted /dev/sda mkpart '' ext4 0% 100%
+    sudo parted /dev/sdb mkpart '' ext4 0% 100%
+    sudo mkfs.ext4 /dev/sda1
+    sudo mkfs.ext4 /dev/sdb1
 
-elif [[ $has_nvme -eq 0 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && $has_sde -eq 1 && ($has_sdf -eq 0 || $has_flash -eq 1) && $sda_bigger -eq 0 ]]; then
+    # Цикл по устройствам для удаления имени разделов
+    for device in /dev/sda /dev/sdb; do
+        echo "Обработка устройства: $device"
+        remove_partition_name "$device"
+    done
+
+    echo "Имя разделов было удалено для всех устройств."
+
+elif [[ $has_nvme -eq 0 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && $has_sde -eq 1 && ($has_sdf -eq 0 || $has_flash -eq 1) && $sda_bigger -eq 0 && $has_sdg -eq 0 ]]; then
     echo -e "\e[32m\e[40m4 В системе обнаружены устройства: sda, sdb, sdc, sdd, sde.(ОС на sda)\e[0m"
     echo "/dev/sdb1       /home/$USER/archive/disk1        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdc1       /home/$USER/archive/disk2        ext4    defaults        0       0"| sudo tee -a /etc/fstab
