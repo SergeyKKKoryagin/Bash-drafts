@@ -30,7 +30,7 @@ EOF
 
 
 # Определяем комбинации и выводим информацию
-if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) ]]; then
+if [[ $has_nvme -eq 1 && $has_sda -eq 1 && $has_sdb -eq 1 && $has_sdc -eq 1 && $has_sdd -eq 1 && ($has_sde -eq 0 || $has_flash -eq 1) && $has_sdf -eq 0 ]]; then
     echo -e "\e[32m\e[40m2 В системе обнаружены NVMe накопитель и устройства: sda, sdb, sdc, sdd.\e[0m"
     echo "/dev/sda1       /home/$USER/archive/disk1        ext4    defaults        0       0"| sudo tee -a /etc/fstab
     echo "/dev/sdb1       /home/$USER/archive/disk2        ext4    defaults        0       0"| sudo tee -a /etc/fstab
